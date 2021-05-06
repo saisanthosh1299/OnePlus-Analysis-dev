@@ -1,0 +1,11 @@
+youtube-transcript-api
+streamlit
+newsapi-python
+plotly
+wordcloud
+pytrends
+nltk
+scikit-learn
+stop-words
+beautifulsoup4
+
