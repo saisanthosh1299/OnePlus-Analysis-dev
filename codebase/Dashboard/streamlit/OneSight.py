@@ -1,10 +1,11 @@
 import streamlit as st
+import streamlit.components.v1 as components
 # To make things easier later, we're also importing numpy and pandas for
 # working with sample data.
 import numpy as np
 import pandas as pd
 import warnings
-
+import smtplib, ssl
 import sys
 import os
 from  PIL import Image
@@ -19,7 +20,8 @@ import time
 #plotly related
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
+logo = Image.open("..//assets//logo.jpeg")
+st.set_page_config(page_title="SSR Analytics", page_icon=logo, layout='wide', initial_sidebar_state='expanded')
 # st.set_option('wideMode', True)
 
 max_width_str = f"max-width: 2000px;"
@@ -31,7 +33,7 @@ st.markdown(
 )
 pd.options.plotting.backend = "plotly"
 
-logo = Image.open("..//assets//logo.png")
+
 
 #############Read The Data
 @st.cache()
@@ -70,9 +72,9 @@ def groupby_year(df,min,max):
 with open("style.css") as f:
     st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
 
-st.sidebar.image(logo, use_column_width = False, width = 150 )
-# st.sidebar.title("<center>Welcome to OneSight")
-st.sidebar.markdown("<h1 style='text-align: center; color: black;'>Welcome to OneSight 💡</h1>", unsafe_allow_html=True)
+st.sidebar.image(logo, use_column_width = False, width = 300)
+# st.sidebar.title("<center>Welcome to SSR Analytics")
+st.sidebar.markdown("<h1 style='text-align: center; color: black;'>Welcome to SSR Analytics </h1>", unsafe_allow_html=True)
 
 ###Get Gauge Chart
 def get_gauge( title, delta, value = 50):
@@ -122,7 +124,7 @@ def o_gsm_entities_viz(brand = "oneplus", minYear = 2016, maxYear=2020, model="8
 ############# Twitter Analyser###############
 def twitter_analyser():
 
-    with st.spinner("**Sit Back**, OneSight is reasoning 🧠 "):
+    with st.spinner("**Sit Back**, SSR Analytics is reasoning 🧠 "):
         time.sleep(1)
     st.markdown("<h2 style='text-align: center; color: black;'>Twitter Analyser📨</h2>", unsafe_allow_html=True)
     @st.cache(allow_output_mutation=True, show_spinner=False)
@@ -187,7 +189,7 @@ def twitter_analyser():
     end_date_option = st.sidebar.selectbox('Select End Date', date_options, index=len(date_options)-1)
 
     keywords = data.Subject.unique()
-    keyword_options = st.sidebar.multiselect(label='Subjects to Include:', options=keywords.tolist(), default=keywords.tolist())
+    keyword_options = st.sidebar.multiselect(label='Subjects to Include:', options=keywords.tolist(), default=keywords.tolist()[0:3])
 
     data_subjects = data[data.Subject.isin(keyword_options)]
     data_daily = filter_by_date(data_subjects, start_date_option, end_date_option)
@@ -228,7 +230,7 @@ def twitter_analyser():
 
 # @st.cache(suppress_st_warning=True)
 def competitive_analysis():
-    with st.spinner("**Sit Back**, OneSight is reasoning 🧠 "):
+    with st.spinner("**Sit Back**, SSR Analytics is reasoning 🧠 "):
         time.sleep(1)
     selected_date_range = st.sidebar.slider('Select the Date Range', 2016, 2020, (2018, 2020), 1)
     min,max = selected_date_range[0],selected_date_range[1]
@@ -460,13 +462,13 @@ def opinion_analysis():
 
 def stats_analysis():
 
-    st.markdown("<h2 style='text-align: center; color: black;'><b>OneSight Statistical Cognition 🕵️<b></h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: black;'><b>SSR Analytics Statistical Cognition 🕵️<b></h1>", unsafe_allow_html=True)
     option = st.selectbox(
         'Select the Statistical Model',
         ('Welch-T Test (For Unequal Variances)', 'ANOVA'))
     if option ==  "Welch-T Test (For Unequal Variances)":
 
-        with st.spinner("**Sit Back**, OneSight is reasoning 🧠 "):
+        with st.spinner("**Sit Back**, SSR Analytics is reasoning 🧠 "):
             time.sleep(1)
       
         # stat_box = st.selectbox("Select the  Stat", options = [1,2])
@@ -498,7 +500,7 @@ def stats_analysis():
 
     elif option == 'ANOVA':
 
-        with st.spinner("**Sit Back**, OneSight is reasoning 🧠 "):
+        with st.spinner("**Sit Back**, SSR Analytics is reasoning 🧠 "):
             time.sleep(1)
         stats2 = Image.open("..//assets//stats2.png")
         st.markdown("### **ANOVA**")
@@ -529,8 +531,45 @@ def stats_analysis():
         st.markdown("_We have seem from the above results that there is a significant difference between the overall customer sentiment for Samsung and OnePlus as seen in panel 1_")
         st.markdown("_However, we found that the both Brands have a similar sentiments for Positively and Negatively rated products as seen in panel 2 and 3._")
 
+def send_email(to_mail, body,subject="feedback"):
+       
+    port = 465  # For SSL
+    smtp_server = "smtp.gmail.com"
+    sender_email = "ssranalytics.me@gmail.com"  # Enter your address
+    receiver_email = to_mail # Enter receiver address
+    password = "ssrmvsr123@"
+    message = body
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, message.encode("utf8"))
 
-
+def feedback_option():
+    with st.form(key="feedback_form"):
+        st.title('Help us shape the SSR Analytics by taking this Feedback ')
+        text_input = st.text_input(label='Enter Your Email 📧')
+        rating = [ "⭐⭐⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐","⭐⭐","⭐"]
+        feedback_rating = st.radio(label="Your Rating On Our App 🤔", options=rating, index=0)
+        feedback_text = st.text_area(label='Describe Your Feedback 📝',max_chars=100)
+        submit_button = st.form_submit_button(label='Send Feedback 💬')
+        if submit_button:
+            st.balloons()
+            TEXT= """
+            
+            Hello,
+            
+            Thank you so much for taking the time for feedback! Everyone here at SSR Analytics
+            loves to know that our Users enjoy what we do.
+            
+            We would work based on your feedback, Thank you again! We’re looking forward to 
+            making your experience even better in the future!
+            
+            Best,
+            SSR Analytics Team.
+            """
+            SUBJECT= """Feedback Received -SSR Analytics """
+            message = 'Subject: {}\n\n{}'.format(SUBJECT, TEXT)
+            send_email(text_input,body=message)
 ############################################################# Chatbot ####################3
 def chatbot():
     import streamlit.components.v1 as components
@@ -554,22 +593,20 @@ def chatbot():
         <iframe width="1050" height="430" allow="microphone;" src="https://console.dialogflow.com/api-client/demo/embedded/f249e6e0-c3bc-470f-a4e0-9445c9bd7c20"></iframe>
         """, height = 430, width = 1050
     )
-
     
 ###############################################################
-user_preference_options = [ "Competitive Analysis🔍", "OneSight Statistical Cognition 🕵️", "Reporting Live Data 🔴📡 ", "Opinion Analysis", "AI Assistant 🧠 💬 👋 "]
+user_preference_options = [ "Competitive Analysis🔍", "Reporting Live Data 🔴📡 ", "AI Assistant 🧠 💬 👋 ","Feedback "]
 user_preference = st.sidebar.radio(label="Want to know?", options=user_preference_options, index=0)
 
-if user_preference == user_preference_options[3]:
-    opinion_analysis()
-elif user_preference == user_preference_options[2]:
+if user_preference == user_preference_options[2]:
+    chatbot()
+elif user_preference == user_preference_options[1]:
     twitter_analyser()
 elif user_preference == user_preference_options[0]:
     competitive_analysis()
-elif user_preference == user_preference_options[1]:
-    stats_analysis()
-elif user_preference == user_preference_options[4]:
-    chatbot()
+    elif user_preference == user_preference_options[3]:
+        feedback_option()
+
 
 # add_selectbox = st.sidebar.multiselect(
 #     'Select the company ',
@@ -581,32 +618,29 @@ elif user_preference == user_preference_options[4]:
 #selected_date_range[0]
 
 # st.sidebar.radio()
-# st.info("**Sit Back**, OneSight is reasoning 🧠 ")
+# st.info("**Sit Back**, SSR Analytics is reasoning 🧠 ")
 
 st.sidebar.title("About")
-st.sidebar.info(
-        """
-        This project is created & maintained by **One Sight Team**. You can learn more about us at
-        [our documentation](https://github.com/vasudevmaduri/OnePlus-Analysis/tree/dev).
+st.sidebar.info("""
+    **Our Team**:
+    - [V.Shreyas](http://linkedin.com/in/shreyas-venishetty-097212194)
+    - [J.Rashmitha](http://linkedin.com/in/rashmitha-jalapally-8b62801a1)
+    - [B.Sai Santhosh](https://www.linkedin.com/in/sai-santhosh-belide-19349516b)
+    
+    
+    """
+)
 
-        **Our Team**:
-        - [Sushmita Sahu](https://www.linkedin.com/in/sushmita-sahu-764b1865/)
-        - [Shoumitra Biswas](https://www.linkedin.com/in/shoumi786/)
-        - [Mahima Sharma](https://www.linkedin.com/in/mahima-sharma/)
-        - [Yash Srivastava](https://www.linkedin.com/in/yash-srivastava-2b266515a/)
-        - [Vasudev Maduri](https://www.linkedin.com/in/vasudevmaduri/)
-"""
-    )
-# hide_streamlit_style = """
-#             <style>
-#             # MainMenu {visibility: hidden;}
-#             footer {visibility: hidden;}
-#             </style>
-#             """
-# st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-st.sidebar.info(" Made with ❤️ In India ")
+st.sidebar.info(" Made with ❤️ in India ")
 
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 
 
